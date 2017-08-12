@@ -2,21 +2,21 @@ package com.outofoctopus.scanner;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
-import com.google.cloud.datastore.Entity;
-import com.google.cloud.datastore.Query;
-import com.google.cloud.datastore.QueryResults;
+import com.outofoctopus.scanner.twitter.TwitterScanner;
+//import twitter4j.management.APIStatistics;
 
-public class OctopusScanner {
+class OctopusScanner {
+    private static final Datastore DATASTORE = DatastoreOptions.getDefaultInstance().getService();
 
-    private static final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
+//    private static final Datastore DATASTORE =
+//            DatastoreOptions.newBuilder()
+//                    .setHost("http://localhost:8081")
+//                    .setProjectId("outofoctopus")
+//                    .build()
+//                    .getService();
 
     public static void main(String[] args) {
-        Query<Entity> query = Query.newEntityQueryBuilder().setKind("twitter").build();
-        QueryResults<Entity> results = datastore.run(query);
-        while (results.hasNext()) {
-            Entity thingy = results.next();
-            System.out.println(thingy.getValue("handle").get());
-        }
+        TwitterScanner twitterScanner = new TwitterScanner(DATASTORE);
+        twitterScanner.scan();
     }
-
 }

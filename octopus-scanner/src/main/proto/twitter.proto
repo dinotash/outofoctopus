@@ -1,0 +1,14 @@
+syntax = "proto2";
+
+option java_package = "com.outofoctopus.proto";
+option java_outer_classname = "TwitterProtos";
+
+import "google/protobuf/timestamp.proto";
+
+message TwitterAccount {
+    optional string handle = 1;
+    optional bool active = 2;
+    optional google.protobuf.Timestamp active_from = 3;
+    optional google.protobuf.Timestamp active_until = 4;
+    optional string auth_token = 5;
+}
