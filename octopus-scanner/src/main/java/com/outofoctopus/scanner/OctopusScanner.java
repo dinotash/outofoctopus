@@ -7,6 +7,7 @@ import com.outofoctopus.scanner.twitter.TwitterScanner;
 
 class OctopusScanner {
     private static final Datastore DATASTORE = DatastoreOptions.getDefaultInstance().getService();
+    private static final String PROJECT_NAME = "outofoctopus";
 
 //    private static final Datastore DATASTORE =
 //            DatastoreOptions.newBuilder()
@@ -16,7 +17,7 @@ class OctopusScanner {
 //                    .getService();
 
     public static void main(String[] args) {
-        TwitterScanner twitterScanner = new TwitterScanner(DATASTORE);
+        TwitterScanner twitterScanner = new TwitterScanner(DATASTORE, PROJECT_NAME);
         twitterScanner.scan();
     }
 }

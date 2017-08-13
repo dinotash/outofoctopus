@@ -16,7 +16,7 @@ class TwitterProcessor {
         this.currentTime = Timestamp.now();
     }
 
-    process() {
+    void process() {
         // If no longer should be active -> set inactive and exit
 //        if (account.getActive() && Timestamp.fromProto(account.getActiveUntil()).compareTo(currentTime) <= 0) {
 //            updateDatastore(updateActive(account, false));

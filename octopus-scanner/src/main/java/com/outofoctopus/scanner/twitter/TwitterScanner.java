@@ -10,8 +10,8 @@ import java.util.List;
 public class TwitterScanner {
     private final TwitterDAO twitterDAO;
 
-    public TwitterScanner(Datastore datastore) {
-        this.twitterDAO = new TwitterDatastoreDAO(datastore);
+    public TwitterScanner(Datastore datastore, String projectName) {
+        this.twitterDAO = new TwitterDatastoreDAO(datastore, projectName);
     }
 
     public void scan() {

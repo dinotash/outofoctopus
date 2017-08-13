@@ -37,6 +37,12 @@
             <version>1.6-beta-2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.truth</groupId>
+            <artifactId>truth</artifactId>
+            <version>0.34</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
