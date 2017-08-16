@@ -5,6 +5,16 @@ import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
 import java.util.Optional;
 
 public interface TwitterDAO {
+    enum TwitterDAOResult {
+        UNKNOWN,
+        SUCCESS,
+        ALREADY_EXISTS,
+        NOT_FOUND,
+        INVALID_ARGUMENT,
+        ERROR_CAN_RETRY,
+        ERROR_DO_NOT_RETRY
+    }
+
     ImmutableList<TwitterAccount> getActiveAccounts();
 
     ImmutableList<TwitterAccount> getAccountsToActivate();
@@ -12,9 +22,9 @@ public interface TwitterDAO {
     Optional<TwitterAccount> getAccount(String handle);
 
     // Updates to database -- returns true iff operation succeeded
-    boolean insert(TwitterAccount newAccount);
+    TwitterDAOResult insert(TwitterAccount newAccount);
 
-    boolean delete(String handle);
+    TwitterDAOResult delete(String handle);
 
-    boolean update(TwitterAccount updatedAccount);
+    TwitterDAOResult update(TwitterAccount updatedAccount);
 }

@@ -3,12 +3,10 @@ package com.outofoctopus.db;
 import com.google.cloud.datastore.*;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.cloud.Timestamp;
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
 import java.util.Optional;
-
-// TODO: Error catching; want to have my own way of distinguishing problems
-
 
 public class TwitterDatastoreDAO implements TwitterDAO {
     private static final String KIND_STRING = "twitter";
@@ -61,34 +59,38 @@ public class TwitterDatastoreDAO implements TwitterDAO {
         return Optional.of(parseTwitterAccount(result));
     }
 
-    public boolean insert(TwitterAccount newAccount) {
+    public TwitterDAOResult insert(TwitterAccount newAccount) {
         try {
             FullEntity parsedAccount = parseEntityFromTwitterAccount(newAccount);
             datastore.add(parsedAccount);
-            return true;
-        } catch (IllegalArgumentException | DatastoreException e) {
-            return false;
+            return TwitterDAOResult.SUCCESS;
+        } catch (DatastoreException e) {
+            return parseDatastoreException(e);
+        } catch (IllegalArgumentException e) {
+            return TwitterDAOResult.INVALID_ARGUMENT;
         }
     }
 
-    public boolean update(TwitterAccount updatedAccount) {
+    public TwitterDAOResult update(TwitterAccount updatedAccount) {
         Key key = Key.newBuilder(projectName, KIND_STRING, updatedAccount.getHandle()).build();
         FullEntity parsedAccountFull = parseEntityFromTwitterAccount(updatedAccount);
         Entity parsedAccount = Entity.newBuilder(key, parsedAccountFull).build();
         try {
             datastore.update(parsedAccount);
-            return true;
-        } catch (IllegalArgumentException | DatastoreException e) {
-            return false;
+            return TwitterDAOResult.SUCCESS;
+        } catch (DatastoreException e) {
+            return parseDatastoreException(e);
+        } catch (IllegalArgumentException e) {
+            return TwitterDAOResult.INVALID_ARGUMENT;
         }
     }
 
-    public boolean delete(String handle) {
+    public TwitterDAOResult delete(String handle) {
         try {
             datastore.delete(getKey(handle));
-            return true;
+            return TwitterDAOResult.SUCCESS;
         } catch (DatastoreException e) {
-            return false;
+            return parseDatastoreException(e);
         }
     }
 
@@ -142,5 +144,33 @@ public class TwitterDatastoreDAO implements TwitterDAO {
 
     private Key getKey(String handle) {
         return keyFactory.newKey(handle);
+    }
+
+    private TwitterDAOResult parseDatastoreException(DatastoreException e) {
+        // Override for updates where I think this makes more sense
+        if (e.getReason().equals("INVALID_ARGUMENT")
+                && e.getMessage().equals("no entity to update")) {
+            return TwitterDAOResult.NOT_FOUND;
+        }
+
+        ImmutableMap<String, TwitterDAOResult> mapping =
+                new ImmutableMap.Builder<String, TwitterDAOResult>()
+                        .put("ABORTED", TwitterDAOResult.ERROR_CAN_RETRY)
+                        .put("ALREADY_EXISTS", TwitterDAOResult.ALREADY_EXISTS)
+                        .put("DEADLINE_EXCEEDED", TwitterDAOResult.ERROR_CAN_RETRY)
+                        .put("FAILED_PRECONDITION", TwitterDAOResult.ERROR_DO_NOT_RETRY)
+                        .put("INTERNAL", TwitterDAOResult.ERROR_CAN_RETRY)
+                        .put("INVALID_ARGUMENT", TwitterDAOResult.INVALID_ARGUMENT)
+                        .put("NOT_FOUND", TwitterDAOResult.NOT_FOUND)
+                        .put("PERMISSION_DENIED", TwitterDAOResult.ERROR_DO_NOT_RETRY)
+                        .put("RESOURCE_EXHAUSTED", TwitterDAOResult.ERROR_DO_NOT_RETRY)
+                        .put("UNAUTHENTICATED", TwitterDAOResult.ERROR_DO_NOT_RETRY)
+                        .put("UNAVAILABLE", TwitterDAOResult.ERROR_CAN_RETRY)
+                        .build();
+        if (mapping.containsKey(e.getReason())) {
+            return mapping.get(e.getReason());
+        } else {
+            return TwitterDAOResult.UNKNOWN;
+        }
     }
 }
