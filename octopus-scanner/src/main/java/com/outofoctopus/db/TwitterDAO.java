@@ -2,19 +2,19 @@ package com.outofoctopus.db;
 
 import com.google.common.collect.ImmutableList;
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
+import java.util.Optional;
 
 public interface TwitterDAO {
     ImmutableList<TwitterAccount> getActiveAccounts();
 
     ImmutableList<TwitterAccount> getAccountsToActivate();
 
-    TwitterAccount getAccount(String handle);
+    Optional<TwitterAccount> getAccount(String handle);
 
-    TwitterAccount insert(TwitterAccount newAccount);
+    // Updates to database -- returns true iff operation succeeded
+    boolean insert(TwitterAccount newAccount);
 
-    void delete(String handle);
+    boolean delete(String handle);
 
-    void update(TwitterAccount updatedAccount);
-
-    // test this shit...
+    boolean update(TwitterAccount updatedAccount);
 }

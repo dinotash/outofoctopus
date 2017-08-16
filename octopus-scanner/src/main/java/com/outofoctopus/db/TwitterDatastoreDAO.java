@@ -5,17 +5,20 @@ import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.common.collect.ImmutableList;
 import com.google.cloud.Timestamp;
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
+import java.util.Optional;
+
+// TODO: Error catching; want to have my own way of distinguishing problems
+
 
 public class TwitterDatastoreDAO implements TwitterDAO {
-    public static final String KIND_STRING = "twitter";
-    public static final String USERNAME_FIELD = "handle";
-    public static final String IS_ACTIVE_FIELD = "active";
-    public static final String ACTIVE_START_FIELD = "active_from";
-    public static final String ACTIVE_END_FIELD = "active_until";
-    public static final String AUTHTOKEN_FIELD = "authtoken";
+    private static final String KIND_STRING = "twitter";
+    private static final String USERNAME_FIELD = "handle";
+    private static final String IS_ACTIVE_FIELD = "active";
+    private static final String ACTIVE_START_FIELD = "active_from";
+    private static final String ACTIVE_END_FIELD = "active_until";
+    private static final String AUTHTOKEN_FIELD = "authtoken";
 
     private final String projectName;
-
     private final Datastore datastore;
     private final KeyFactory keyFactory;
 
@@ -23,6 +26,13 @@ public class TwitterDatastoreDAO implements TwitterDAO {
         this.projectName = projectName;
         this.datastore = datastore;
         this.keyFactory = datastore.newKeyFactory().setKind(KIND_STRING);
+    }
+
+    public ImmutableList<TwitterAccount> getAllAccounts() {
+        Query<Entity> query = Query.newEntityQueryBuilder()
+                .setKind(KIND_STRING)
+                .build();
+        return parseResults(datastore.run(query));
     }
 
     public ImmutableList<TwitterAccount> getActiveAccounts() {
@@ -43,33 +53,43 @@ public class TwitterDatastoreDAO implements TwitterDAO {
         return parseResults(datastore.run(query));
     }
 
-    public TwitterAccount getAccount(String handle) {
-        Query<Entity> query = Query.newEntityQueryBuilder()
-                .setKind(KIND_STRING)
-                .setFilter(PropertyFilter.eq(USERNAME_FIELD, handle))
-                .build();
-        QueryResults<Entity> results = datastore.run(query);
-
-        // return first result
-        return parseTwitterAccount(results.next());
+    public Optional<TwitterAccount> getAccount(String handle) {
+        Entity result = datastore.get(getKey(handle));
+        if (result == null) {
+            return Optional.empty();
+        }
+        return Optional.of(parseTwitterAccount(result));
     }
 
-    public TwitterAccount insert(TwitterAccount newAccount) {
-        FullEntity parsedAccount = parseEntityFromTwitterAccount(newAccount);
-        FullEntity insertedAccount = datastore.add(parsedAccount);
-        return parseTwitterAccount(insertedAccount);
+    public boolean insert(TwitterAccount newAccount) {
+        try {
+            FullEntity parsedAccount = parseEntityFromTwitterAccount(newAccount);
+            datastore.add(parsedAccount);
+            return true;
+        } catch (IllegalArgumentException | DatastoreException e) {
+            return false;
+        }
     }
 
-    public void update(TwitterAccount updatedAccount) {
+    public boolean update(TwitterAccount updatedAccount) {
         Key key = Key.newBuilder(projectName, KIND_STRING, updatedAccount.getHandle()).build();
         FullEntity parsedAccountFull = parseEntityFromTwitterAccount(updatedAccount);
         Entity parsedAccount = Entity.newBuilder(key, parsedAccountFull).build();
-        datastore.update(parsedAccount);
+        try {
+            datastore.update(parsedAccount);
+            return true;
+        } catch (IllegalArgumentException | DatastoreException e) {
+            return false;
+        }
     }
 
-    public void delete(String handle) {
-        Key key = Key.newBuilder(projectName, KIND_STRING, handle).build();
-        datastore.delete(key);
+    public boolean delete(String handle) {
+        try {
+            datastore.delete(getKey(handle));
+            return true;
+        } catch (DatastoreException e) {
+            return false;
+        }
     }
 
     private ImmutableList<TwitterAccount> parseResults(QueryResults<Entity> results) {
@@ -103,17 +123,24 @@ public class TwitterDatastoreDAO implements TwitterDAO {
         if (!account.hasHandle()) {
             throw new IllegalArgumentException("Unable to create entity from proto with no handle");
         }
+        boolean active = account.hasActive() && account.getActive();
+        Timestamp activeFrom = account.hasActiveFrom() ? Timestamp.fromProto(account.getActiveFrom()) : Timestamp.MIN_VALUE;
+        Timestamp activeTo = account.hasActiveUntil() ? Timestamp.fromProto(account.getActiveUntil()) : Timestamp.MIN_VALUE;
 
         entity.setKey(getKey(account));
         entity.set(USERNAME_FIELD, account.getHandle());
-        entity.set(IS_ACTIVE_FIELD, account.getActive());
+        entity.set(IS_ACTIVE_FIELD, active);
         entity.set(AUTHTOKEN_FIELD, account.getAuthToken());
-        entity.set(ACTIVE_START_FIELD, Timestamp.fromProto(account.getActiveFrom()));
-        entity.set(ACTIVE_END_FIELD, Timestamp.fromProto(account.getActiveUntil()));
+        entity.set(ACTIVE_START_FIELD, activeFrom);
+        entity.set(ACTIVE_END_FIELD, activeTo);
         return entity.build();
     }
 
     private Key getKey(TwitterAccount account) {
         return keyFactory.newKey(account.getHandle());
+    }
+
+    private Key getKey(String handle) {
+        return keyFactory.newKey(handle);
     }
 }
