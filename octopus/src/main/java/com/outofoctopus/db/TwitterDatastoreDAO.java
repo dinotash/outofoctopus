@@ -14,7 +14,8 @@ public class TwitterDatastoreDAO implements TwitterDAO {
     private static final String IS_ACTIVE_FIELD = "active";
     private static final String ACTIVE_START_FIELD = "active_from";
     private static final String ACTIVE_END_FIELD = "active_until";
-    private static final String AUTHTOKEN_FIELD = "authtoken";
+    private static final String ACCESS_TOKEN_FIELD = "access_token";
+    private static final String ACCESS_TOKEN_SECRET_FIELD = "access_token_secret";
 
     private final String projectName;
     private final Datastore datastore;
@@ -113,7 +114,8 @@ public class TwitterDatastoreDAO implements TwitterDAO {
         account.setActive(entity.getBoolean(IS_ACTIVE_FIELD));
         account.setActiveFrom(entity.getTimestamp(ACTIVE_START_FIELD).toProto());
         account.setActiveUntil(entity.getTimestamp(ACTIVE_END_FIELD).toProto());
-        account.setAuthToken(entity.getString(AUTHTOKEN_FIELD));
+        account.setAccessToken(entity.getString(ACCESS_TOKEN_FIELD));
+        account.setAccessTokenSecret(entity.getString(ACCESS_TOKEN_SECRET_FIELD));
 
         return account.build();
     }
@@ -132,7 +134,8 @@ public class TwitterDatastoreDAO implements TwitterDAO {
         entity.setKey(getKey(account));
         entity.set(USERNAME_FIELD, account.getHandle());
         entity.set(IS_ACTIVE_FIELD, active);
-        entity.set(AUTHTOKEN_FIELD, account.getAuthToken());
+        entity.set(ACCESS_TOKEN_FIELD, account.getAccessToken());
+        entity.set(ACCESS_TOKEN_SECRET_FIELD, account.getAccessTokenSecret());
         entity.set(ACTIVE_START_FIELD, activeFrom);
         entity.set(ACTIVE_END_FIELD, activeTo);
         return entity.build();
@@ -151,6 +154,11 @@ public class TwitterDatastoreDAO implements TwitterDAO {
         if (e.getReason().equals("INVALID_ARGUMENT")
                 && e.getMessage().equals("no entity to update")) {
             return TwitterDAOResult.NOT_FOUND;
+        }
+
+        if (e.getReason().equals("INVALID_ARGUMENT")
+                && e.getMessage().equals("entity already exists")) {
+            return TwitterDAOResult.ALREADY_EXISTS;
         }
 
         ImmutableMap<String, TwitterDAOResult> mapping =

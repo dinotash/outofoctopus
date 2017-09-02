@@ -10,5 +10,6 @@ message TwitterAccount {
     optional bool active = 2;
     optional google.protobuf.Timestamp active_from = 3;
     optional google.protobuf.Timestamp active_until = 4;
-    optional string auth_token = 5;
+    optional string access_token = 5;
+    optional string access_token_secret = 6;
 }

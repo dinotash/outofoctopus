@@ -5,6 +5,9 @@ import com.google.cloud.datastore.Datastore;
 import com.outofoctopus.db.TwitterDAO;
 import com.outofoctopus.db.TwitterDatastoreDAO;
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
+import twitter4j.TwitterException;
+
+import java.io.IOException;
 import java.util.List;
 
 public class TwitterScanner {
@@ -14,7 +17,7 @@ public class TwitterScanner {
         this.twitterDAO = new TwitterDatastoreDAO(datastore, projectName);
     }
 
-    public void scan() {
+    public void scan() throws IOException, TwitterException {
         List<TwitterAccount> activeAccounts = twitterDAO.getActiveAccounts();
         List<TwitterAccount> accountsToActivate = twitterDAO.getAccountsToActivate();
         for (TwitterAccount account : Iterables.concat(activeAccounts, accountsToActivate)) {

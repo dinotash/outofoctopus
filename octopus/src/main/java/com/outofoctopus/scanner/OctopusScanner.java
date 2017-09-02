@@ -3,6 +3,9 @@ package com.outofoctopus.scanner;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.outofoctopus.scanner.twitter.TwitterScanner;
+import twitter4j.TwitterException;
+
+import java.io.IOException;
 //import twitter4j.management.APIStatistics;
 
 class OctopusScanner {
@@ -16,7 +19,7 @@ class OctopusScanner {
 //                    .build()
 //                    .getService();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, TwitterException {
         TwitterScanner twitterScanner = new TwitterScanner(DATASTORE, PROJECT_NAME);
         twitterScanner.scan();
     }

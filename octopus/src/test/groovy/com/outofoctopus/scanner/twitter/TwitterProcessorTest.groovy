@@ -7,6 +7,11 @@ class TwitterProcessorTest extends GroovyTestCase {
 
     void tearDown() {
     }
+
+    void testWoo() {
+
+    }
+
     // Check it switches off overdone account and changes nothing else
 
     // Check it switches on overdone account and saves it
@@ -16,8 +21,4 @@ class TwitterProcessorTest extends GroovyTestCase {
     // What if datastore throws exception?
 
     // What if twitter client throws exception?
-
-    void testWoo() {
-
-    }
 }

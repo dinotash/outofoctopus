@@ -17,7 +17,7 @@ class TwitterDatastoreDAOTest extends GroovyTestCase {
     private TwitterDatastoreDAO dao = new TwitterDatastoreDAO(
             helper.getOptions().getService(), helper.getOptions().projectId)
 
-    private static final long WAIT_MILLIS = 5000 // add a delay to tests to avoid flakiness
+    private static final long WAIT_MILLIS = 10000 // add a delay to tests to avoid flakiness
 
     private static final ACTIVE_ACCOUNT =
             TwitterAccount.newBuilder()
@@ -25,7 +25,8 @@ class TwitterDatastoreDAOTest extends GroovyTestCase {
                     .setHandle("test_active")
                     .setActiveFrom(Timestamp.now().toProto())
                     .setActiveUntil(Timestamp.now().toProto())
-                    .setAuthToken("abc")
+                    .setAccessToken("abc")
+                    .setAccessTokenSecret("def")
                     .build()
 
     private static final ACCOUNT_TO_ACTIVATE =
@@ -34,14 +35,15 @@ class TwitterDatastoreDAOTest extends GroovyTestCase {
                     .setHandle("test_to_activate")
                     .setActiveFrom(Timestamp.MIN_VALUE.toProto())
                     .setActiveUntil(com.google.protobuf.Timestamp.newBuilder().setSeconds(Timestamp.MAX_VALUE.getSeconds()).build())
-                    .setAuthToken("def")
+                    .setAccessToken("ghi")
+                    .setAccessTokenSecret("jkl")
                     .build()
 
     @Before
     void setUp() {
+        super.setUp()
         helper.start()
         helper.reset()
-        super.setUp()
     }
 
     @Test
@@ -80,7 +82,7 @@ class TwitterDatastoreDAOTest extends GroovyTestCase {
         TwitterDAOResult insertStatus2 = dao.insert(ACTIVE_ACCOUNT)
         Thread.sleep WAIT_MILLIS
         assertThat(insertStatus1).isEqualTo TwitterDAOResult.SUCCESS
-        assertThat(insertStatus2).isEqualTo TwitterDAOResult.UNKNOWN
+        assertThat(insertStatus2).isEqualTo TwitterDAOResult.ALREADY_EXISTS
         assertThat(dao.getAllAccounts()).containsExactly ACTIVE_ACCOUNT
         assertThat(dao.getActiveAccounts()).containsExactly ACTIVE_ACCOUNT
     }
@@ -121,7 +123,7 @@ class TwitterDatastoreDAOTest extends GroovyTestCase {
         assertThat(dao.getAllAccounts()).isEmpty()
         TwitterDAOResult deleteStatus = dao.delete(ACTIVE_ACCOUNT.getHandle())
         Thread.sleep WAIT_MILLIS
-        assertThat(deleteStatus).isEqualTo(TwitterDAOResult.NOT_FOUND)
+        assertThat(deleteStatus).isEqualTo(TwitterDAOResult.SUCCESS)
         assertThat(dao.getAllAccounts()).isEmpty()
 
     }
