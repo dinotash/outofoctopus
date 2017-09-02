@@ -1,6 +1,8 @@
 package com.outofoctopus.client
 
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount
+import twitter4j.TwitterFactory
+import twitter4j.conf.ConfigurationBuilder
 
 class TwitterClientTest extends GroovyTestCase {
 
@@ -14,14 +16,22 @@ class TwitterClientTest extends GroovyTestCase {
         Properties consumer = new Properties()
         consumer.load(input)
 
+        ConfigurationBuilder cb = new ConfigurationBuilder();
+        cb.setDebugEnabled(true)
+            .setOAuthConsumerKey(consumer.getProperty("oauth.consumerKey"))
+            .setOAuthConsumerSecret(consumer.getProperty("oauth.consumerSecret"));
+
+        twitterClient = new TwitterClient(new TwitterFactory(cb.build()).getInstance());
         testUser = TwitterAccount.newBuilder()
                 .setHandle(consumer.getProperty("accountName"))
                 .setAccessToken(consumer.getProperty("oauth.accessToken"))
                 .setAccessTokenSecret(consumer.getProperty("oauth.accessTokenSecret"))
                 .build()
-
-        twitterClient = new TwitterClient()
         twitterClient.authenticate(testUser)
+    }
+
+    void tearDown() {
+        super.tearDown()
     }
 
     void testWoo() {

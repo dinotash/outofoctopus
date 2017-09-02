@@ -6,6 +6,7 @@ class OctopusScannerTest extends GroovyTestCase {
     }
 
     void tearDown() {
+        super.tearDown()
     }
 
     void testWoo() {

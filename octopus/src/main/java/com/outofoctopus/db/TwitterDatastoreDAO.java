@@ -1,10 +1,13 @@
 package com.outofoctopus.db;
 
+import com.outofoctopus.scanner.ScannerModule.ProjectName;
+import com.outofoctopus.db.DAOModule.TwitterInject;
 import com.google.cloud.datastore.*;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.cloud.Timestamp;
+import com.google.inject.Inject;
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
 import java.util.Optional;
 
@@ -21,10 +24,13 @@ public class TwitterDatastoreDAO implements TwitterDAO {
     private final Datastore datastore;
     private final KeyFactory keyFactory;
 
-    public TwitterDatastoreDAO(Datastore datastore, String projectName) {
-        this.projectName = projectName;
+    @Inject
+    public TwitterDatastoreDAO(Datastore datastore,
+       @TwitterInject KeyFactory keyFactory,
+       @ProjectName String projectName) {
         this.datastore = datastore;
-        this.keyFactory = datastore.newKeyFactory().setKind(KIND_STRING);
+        this.keyFactory = keyFactory;
+        this.projectName = projectName;
     }
 
     public ImmutableList<TwitterAccount> getAllAccounts() {

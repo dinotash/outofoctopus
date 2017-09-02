@@ -1,30 +1,29 @@
 package com.outofoctopus.scanner.twitter;
 
-import com.google.cloud.Timestamp;
+import com.google.inject.Inject;
 import com.outofoctopus.client.TwitterClient;
 import com.outofoctopus.db.TwitterDAO;
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
-import twitter4j.TwitterException;
-import twitter4j.TwitterFactory;
-import twitter4j.conf.Configuration;
-import twitter4j.conf.ConfigurationBuilder;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import java.time.Clock;
 
 public class TwitterProcessor {
 
-    private final Timestamp currentTime;
+    private final Clock clock;
     private final TwitterDAO dao;
-    private final TwitterAccount account;
     private final TwitterClient client;
+    private TwitterAccount account; // account being processed at present
 
-    TwitterProcessor(TwitterAccount account, TwitterDAO dao) throws IOException, TwitterException {
+    @Inject
+    TwitterProcessor(TwitterDAO dao, TwitterClient client, Clock clock) {
         this.dao = dao;
-        this.account = account;
-        this.currentTime = Timestamp.now();
-        this.client = new TwitterClient(new TwitterFactory(loadTwitterConfiguration()));
+        this.clock = clock;
+        this.client = client;
+        this.account = null;
+    }
+
+    TwitterProcessor setAccount(TwitterAccount newAccount) {
+        account = newAccount;
+        return this;
     }
 
     void process() {
@@ -61,17 +60,5 @@ public class TwitterProcessor {
 
     private void updateDatastore(TwitterAccount account) {
         dao.update(account);
-    }
-
-    private Configuration loadTwitterConfiguration() throws IOException {
-        // Specify consumer key and consumer secret in file main/resources/twitter.properties
-        InputStream input = getClass().getClassLoader().getResourceAsStream("twitter.properties");
-        Properties consumer = new Properties();
-        consumer.load(input);
-        ConfigurationBuilder cb = new ConfigurationBuilder();
-        cb.setDebugEnabled(true)
-                .setOAuthConsumerKey(consumer.getProperty("oauth.consumerKey"))
-                .setOAuthConsumerSecret(consumer.getProperty("oauth.consumerSecret"));
-        return cb.build();
     }
 }

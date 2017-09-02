@@ -1,5 +1,6 @@
 package com.outofoctopus.client;
 
+import com.google.inject.Inject;
 import com.outofoctopus.proto.TwitterProtos;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
@@ -11,8 +12,9 @@ public class TwitterClient {
 
     private final Twitter twitter;
 
-    public TwitterClient(TwitterFactory twitterFactory) throws TwitterException, IOException {
-        this.twitter = twitterFactory.getInstance();
+    @Inject
+    TwitterClient(Twitter twitter) throws TwitterException, IOException {
+        this.twitter = twitter;
     }
 
     public void authenticate(TwitterProtos.TwitterAccount account) throws TwitterException {
