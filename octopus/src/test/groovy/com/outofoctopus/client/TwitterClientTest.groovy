@@ -1,13 +1,26 @@
 package com.outofoctopus.client
 
+import org.junit.Rule
+import org.mockito.MockitoAnnotations
+
+import static com.google.common.truth.Truth.assertThat
+import static org.mockito.Mockito.when;
+
+import org.mockito.Mockito
+import twitter4j.ResponseList
+import twitter4j.Status
+import twitter4j.Twitter
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount
 import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
+import org.mockito.Mock;
 
 class TwitterClientTest extends GroovyTestCase {
 
     private static TwitterAccount testUser
-    private static TwitterClient twitterClient
+    private static TwitterClient realTwitterClient
+    private static TwitterClient mockTwitterClient
+    @Mock private Twitter mockTwitter
 
     void setUp() {
         super.setUp()
@@ -18,24 +31,34 @@ class TwitterClientTest extends GroovyTestCase {
 
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true)
-            .setOAuthConsumerKey(consumer.getProperty("oauth.consumerKey"))
-            .setOAuthConsumerSecret(consumer.getProperty("oauth.consumerSecret"));
+            .setOAuthConsumerKey(consumer.getProperty("app.oauth.consumerKey"))
+            .setOAuthConsumerSecret(consumer.getProperty("app.oauth.consumerSecret"));
 
-        twitterClient = new TwitterClient(new TwitterFactory(cb.build()).getInstance());
+        realTwitterClient = new TwitterClient(new TwitterFactory(cb.build()).getInstance());
         testUser = TwitterAccount.newBuilder()
-                .setHandle(consumer.getProperty("accountName"))
-                .setAccessToken(consumer.getProperty("oauth.accessToken"))
-                .setAccessTokenSecret(consumer.getProperty("oauth.accessTokenSecret"))
+                .setHandle(consumer.getProperty("testaccount.accountName"))
+                .setAccessToken(consumer.getProperty("testaccount.oauth.accessToken"))
+                .setAccessTokenSecret(consumer.getProperty("testaccount.oauth.accessTokenSecret"))
                 .build()
-        twitterClient.authenticate(testUser)
+        realTwitterClient.authenticate(testUser)
+
+        MockitoAnnotations.initMocks(this);
+        mockTwitterClient = new TwitterClient(mockTwitter)
     }
 
     void tearDown() {
         super.tearDown()
     }
 
-    void testWoo() {
+    void testlastTweetSent() {
+        assertThat(realTwitterClient.lastTweetSentId()).isEqualTo(904389367774404608L);
+    }
 
+    void testReturnsZeroWhenNoTweetsSent() {
+        ResponseList<Status> emptyResponse = Mockito.mock(ResponseList.class)
+        when(emptyResponse.isEmpty()).thenReturn(true)
+        when(mockTwitter.getUserTimeline()).thenReturn(emptyResponse)
+        assertThat(mockTwitterClient.lastTweetSentId()).isEqualTo(0)
     }
 
     // get last tweet sent
