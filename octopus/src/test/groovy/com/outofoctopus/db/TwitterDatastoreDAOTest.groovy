@@ -5,7 +5,7 @@ import static com.google.common.truth.Truth.assertThat
 import com.google.cloud.Timestamp
 import com.google.cloud.datastore.Datastore
 import com.google.cloud.datastore.testing.LocalDatastoreHelper
-import com.outofoctopus.db.TwitterDAO.TwitterDAOResult;
+import com.outofoctopus.db.TwitterDAO.TwitterDAOResult
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount
 
 class TwitterDatastoreDAOTest extends GroovyTestCase {
