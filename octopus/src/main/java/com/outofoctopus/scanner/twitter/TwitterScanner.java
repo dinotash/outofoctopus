@@ -4,9 +4,9 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.outofoctopus.db.TwitterDAO;
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
-import twitter4j.TwitterException;
 import java.io.IOException;
 import java.util.List;
+import twitter4j.TwitterException;
 
 public class TwitterScanner {
     private final TwitterDAO twitterDAO;

@@ -5,10 +5,8 @@ import com.google.inject.Injector;
 import com.outofoctopus.client.TwitterClientModule;
 import com.outofoctopus.db.DAOModule;
 import com.outofoctopus.scanner.twitter.TwitterScanner;
-import twitter4j.TwitterException;
-
 import java.io.IOException;
-
+import twitter4j.TwitterException;
 
 class OctopusScanner {
 //    private static final Datastore DATASTORE =
