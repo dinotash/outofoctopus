@@ -44,7 +44,16 @@ public class TwitterClient {
         this.account = account;
     }
 
-    long lastTweetSentId() throws TwitterException {
+    public ImmutableList<Status> sendReplies(ImmutableList<StatusUpdate> repliesToSend)
+            throws TwitterException {
+        ImmutableList.Builder<Status> sent = ImmutableList.builder();
+        for (StatusUpdate reply : repliesToSend) {
+            sent.add(twitter.updateStatus(reply));
+        }
+        return sent.build();
+    }
+
+    public long lastTweetSentId() throws TwitterException {
         ResponseList<Status> latestTweets = twitter.getUserTimeline();
         if (latestTweets.isEmpty()) {
             return 0;
@@ -52,9 +61,14 @@ public class TwitterClient {
         return latestTweets.get(0).getId();
     }
 
-    ResponseList<Status> newTweets(long sinceId) throws TwitterException {
+    ResponseList<Status> newMentions(long sinceId) throws TwitterException {
         Paging paging = sinceId == 0 ? new Paging() : new Paging(sinceId);
         return twitter.getMentionsTimeline(paging);
+    }
+
+    ResponseList<Status> newTweets(long sinceId) throws TwitterException {
+        Paging paging = sinceId == 0 ? new Paging() : new Paging(sinceId);
+        return twitter.getUserTimeline(paging);
     }
 
     ImmutableList<StatusUpdate> prepareReplies(List<Status> tweetsToReplyTo) {

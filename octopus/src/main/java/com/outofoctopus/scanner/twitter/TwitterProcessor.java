@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.outofoctopus.client.TwitterClient;
 import com.outofoctopus.db.TwitterDAO;
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
+import twitter4j.TwitterException;
+
 import java.time.Clock;
 
 public class TwitterProcessor {
@@ -26,7 +28,7 @@ public class TwitterProcessor {
         return this;
     }
 
-    void process() {
+    void process() throws TwitterException {
         // If no longer should be active -> set inactive and exit
 //        if (account.getActive() && Timestamp.fromProto(account.getActiveUntil()).compareTo(currentTime) <= 0) {
 //            updateDatastore(updateActive(account, false));
@@ -40,7 +42,10 @@ public class TwitterProcessor {
 //            updateDatastore(updateActive(account, true));
 //        }
 
-        System.out.println("If you're happy and you know it");
+//        System.out.println("If you're happy and you know it");
+        System.out.println(account.getHandle());
+        System.out.println(String.format("last tweet ID: %s", Long.toString(client.lastTweetSentId())));
+
 
         // For active accounts,
         // Find tweet number to start from -> where last left off -> should save it in datastore?

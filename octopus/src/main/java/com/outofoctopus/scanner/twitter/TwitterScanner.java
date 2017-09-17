@@ -23,9 +23,7 @@ public class TwitterScanner {
         List<TwitterAccount> accountsToActivate = twitterDAO.getAccountsToActivate();
         for (TwitterAccount account : Iterables.concat(activeAccounts, accountsToActivate)) {
             twitterProcessor.setAccount(account).process();
-
-            System.out.println(account.getHandle());
-            System.out.println(account.getActiveUntil().toString());
+            twitterProcessor.process();
         }
         System.out.println("And we're off to the races");
     }

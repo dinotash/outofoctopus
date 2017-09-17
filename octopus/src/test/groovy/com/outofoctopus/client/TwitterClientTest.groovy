@@ -31,7 +31,8 @@ class TwitterClientTest extends GroovyTestCase {
             TwitterObjectFactory.createStatus(
             "{'id': " + TWEET_ID.toString() + ", 'user': {'screen_name': 'xyz'}, 'text': 'test message'}"))
 
-    private static TwitterAccount testUser
+    private static TwitterAccount mainTestUser
+    private static TwitterAccount sendTestUser
     private static TwitterClient realTwitterClient
     private static TwitterClient mockTwitterClient
     @Mock private Twitter mockTwitter
@@ -49,10 +50,17 @@ class TwitterClientTest extends GroovyTestCase {
             .setOAuthConsumerSecret(consumer.getProperty("app.oauth.consumerSecret"))
 
         realTwitterClient = new TwitterClient(new TwitterFactory(cb.build()).getInstance())
-        testUser = TwitterAccount.newBuilder()
-                .setHandle(consumer.getProperty("testaccount.accountName"))
-                .setAccessToken(consumer.getProperty("testaccount.oauth.accessToken"))
-                .setAccessTokenSecret(consumer.getProperty("testaccount.oauth.accessTokenSecret"))
+
+        mainTestUser = TwitterAccount.newBuilder()
+                .setHandle(consumer.getProperty("maintestaccount.accountName"))
+                .setAccessToken(consumer.getProperty("maintestaccount.oauth.accessToken"))
+                .setAccessTokenSecret(consumer.getProperty("maintestaccount.oauth.accessTokenSecret"))
+                .build()
+
+        sendTestUser = TwitterAccount.newBuilder()
+                .setHandle(consumer.getProperty("sendtestaccount.oauth.accessToken"))
+                .setAccessToken(consumer.getProperty("sendtestaccount.oauth.accessToken"))
+                .setAccessTokenSecret(consumer.getProperty("sendtestaccount.oauth.accessTokenSecret"))
                 .build()
 
         MockitoAnnotations.initMocks(this);
@@ -64,7 +72,7 @@ class TwitterClientTest extends GroovyTestCase {
     }
 
     void testLastTweetSent() {
-        realTwitterClient.authenticate(testUser)
+        realTwitterClient.authenticate(mainTestUser)
         assertThat(realTwitterClient.lastTweetSentId()).isEqualTo(LAST_TWEET_SENT_ID);
     }
 
@@ -75,24 +83,24 @@ class TwitterClientTest extends GroovyTestCase {
         assertThat(mockTwitterClient.lastTweetSentId()).isEqualTo(0)
     }
 
-    void testNewTweetsSinceAllTime() {
-        realTwitterClient.authenticate(testUser)
-        ResponseList<Status> results = realTwitterClient.newTweets(0)
+    void testNewMentionsSinceAllTime() {
+        realTwitterClient.authenticate(mainTestUser)
+        ResponseList<Status> results = realTwitterClient.newMentions(0)
         assertThat(results).hasSize(2)
         assertThat(results.get(0).getId()).isEqualTo(SECOND_MENTION_ID) // newest first
         assertThat(results.get(1).getId()).isEqualTo(FIRST_MENTION_ID)
     }
 
-    void testNewTweetsSinceTime() {
-        realTwitterClient.authenticate(testUser)
-        ResponseList<Status> results = realTwitterClient.newTweets(FIRST_MENTION_ID)
+    void testNewMentionsSinceTime() {
+        realTwitterClient.authenticate(mainTestUser)
+        ResponseList<Status> results = realTwitterClient.newMentions(FIRST_MENTION_ID)
         assertThat(results).hasSize(1)
         assertThat(results.get(0).getId()).isEqualTo(SECOND_MENTION_ID)
     }
 
     void testReplyDefaultMessage() {
         TwitterAccount replyUser =
-                TwitterAccount.newBuilder(testUser)
+                TwitterAccount.newBuilder(mainTestUser)
                 .setActiveUntil(Timestamp.ofTimeMicroseconds(SIXTH_SEPTEMBER_2017_9AM_GMT_MICROSECONDS).toProto())
                 .setLocale("en-GB")
                 .setTimezone("Europe/Paris")
@@ -104,13 +112,12 @@ class TwitterClientTest extends GroovyTestCase {
         assertThat(results).hasSize(1)
         assertThat(results.get(0).getStatus()).isEqualTo(expectedReply)
         assertThat(results.get(0).getInReplyToStatusId()).isEqualTo(TWEET_ID)
-
     }
 
     void testReplyCustomMessage() {
         String customMessage = "wibbly wobbly"
         TwitterAccount replyUser =
-                TwitterAccount.newBuilder(testUser)
+                TwitterAccount.newBuilder(mainTestUser)
                 .setMessage(customMessage)
                 .build()
         realTwitterClient.authenticate(replyUser)
@@ -123,7 +130,7 @@ class TwitterClientTest extends GroovyTestCase {
 
     void testReplyDifferentLocale() {
         TwitterAccount replyUser =
-                TwitterAccount.newBuilder(testUser)
+                TwitterAccount.newBuilder(mainTestUser)
                         .setActiveUntil(Timestamp.ofTimeMicroseconds(SIXTH_SEPTEMBER_2017_9AM_GMT_MICROSECONDS).toProto())
                         .setLocale("de")
                         .setTimezone("America/New_York")
@@ -139,7 +146,7 @@ class TwitterClientTest extends GroovyTestCase {
 
     void testReplyDifferentTimeZone() {
         TwitterAccount replyUser =
-                TwitterAccount.newBuilder(testUser)
+                TwitterAccount.newBuilder(mainTestUser)
                         .setActiveUntil(Timestamp.ofTimeMicroseconds(SIXTH_SEPTEMBER_2017_9AM_GMT_MICROSECONDS).toProto())
                         .setLocale("en-GB")
                         .setTimezone("Pacific/Honolulu") // more than 9 hours behind GMT so it's the day before
@@ -155,7 +162,7 @@ class TwitterClientTest extends GroovyTestCase {
 
     void testReplyTooLongAbbreviated() {
         TwitterAccount replyUser =
-                TwitterAccount.newBuilder(testUser)
+                TwitterAccount.newBuilder(mainTestUser)
                 .setMessage(StringUtils.repeat("a", 200))
                 .build()
         realTwitterClient.authenticate(replyUser)
@@ -165,5 +172,30 @@ class TwitterClientTest extends GroovyTestCase {
         assertThat(results).hasSize(1)
         assertThat(results.get(0).getStatus()).isEqualTo(expectedReply)
         assertThat(results.get(0).getInReplyToStatusId()).isEqualTo(TWEET_ID)
+    }
+
+    void testSendReply() {
+        realTwitterClient.authenticate(sendTestUser)
+        String replyOne = String.format("Reply one %s", System.currentTimeMillis())
+        String replyTwo = String.format("Reply two %s", System.currentTimeMillis() + 123456L)
+
+        ImmutableList<StatusUpdate> updates = ImmutableList.of(
+                new StatusUpdate(replyOne),
+                new StatusUpdate(replyTwo))
+        ImmutableList<Status> sent = realTwitterClient.sendReplies(updates)
+
+        // Check return value
+        assertThat(sent).hasSize(2)
+        Status sentOne = sent.get(0)
+        Status sentTwo = sent.get(1)
+        assertThat(sentOne.getText()).isEqualTo(replyOne)
+        assertThat(sentOne.isRetweet()).isFalse()
+        assertThat(sentTwo.getText()).isEqualTo(replyTwo)
+        assertThat(sentTwo.isRetweet()).isFalse()
+
+        // Check it actually sent
+        long firstReply = Math.min(sentOne.getId(), sentTwo.getId())
+        ResponseList<Status> actuallySent = realTwitterClient.newTweets(firstReply - 1)
+        assertThat(actuallySent).containsExactly(sentOne, sentTwo)
     }
 }

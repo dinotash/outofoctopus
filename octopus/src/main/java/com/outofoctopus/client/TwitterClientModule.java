@@ -23,8 +23,8 @@ public class TwitterClientModule extends AbstractModule {
         consumer.load(input);
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true)
-                .setOAuthConsumerKey(consumer.getProperty("oauth.consumerKey"))
-                .setOAuthConsumerSecret(consumer.getProperty("oauth.consumerSecret"));
+            .setOAuthConsumerKey(consumer.getProperty("app.oauth.consumerKey"))
+            .setOAuthConsumerSecret(consumer.getProperty("app.oauth.consumerSecret"));
         return new TwitterFactory(cb.build()).getInstance();
     }
 }
