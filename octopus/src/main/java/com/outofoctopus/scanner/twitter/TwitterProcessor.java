@@ -44,7 +44,7 @@ public class TwitterProcessor {
 
 //        System.out.println("If you're happy and you know it");
         System.out.println(account.getHandle());
-        System.out.println(String.format("last tweet ID: %s", Long.toString(client.lastTweetSentId())));
+//        System.out.println(String.format("last tweet ID: %s", Long.toString(client.lastTweetSentId())));
 
 
         // For active accounts,
