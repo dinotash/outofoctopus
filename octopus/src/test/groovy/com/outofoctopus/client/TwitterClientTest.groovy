@@ -1,18 +1,15 @@
 package com.outofoctopus.client
 
-import org.apache.commons.lang3.StringUtils
-
 import static com.google.common.truth.Truth.assertThat
 
 import com.google.cloud.Timestamp
 import com.google.common.collect.ImmutableList
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount
-import twitter4j.Paging
+import org.apache.commons.lang3.StringUtils
 import twitter4j.ResponseList
 import twitter4j.Status
 import twitter4j.StatusUpdate
 import twitter4j.TwitterFactory
-import twitter4j.TwitterObjectFactory
 import twitter4j.conf.ConfigurationBuilder
 
 class TwitterClientTest extends GroovyTestCase {

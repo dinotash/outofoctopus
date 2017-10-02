@@ -10,7 +10,7 @@ import com.outofoctopus.proto.TwitterProtos.TwitterAccount
 
 class TwitterDatastoreDAOTest extends GroovyTestCase {
 
-    private static final long WAIT_MILLIS = 10 // add a delay to tests to avoid flakiness
+    private static final long WAIT_MILLIS = 5000 // add a delay to tests to avoid flakiness
 
     private static final ACTIVE_ACCOUNT =
             TwitterAccount.newBuilder()
