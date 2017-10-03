@@ -1,4 +1,4 @@
-package com.outofoctopus.keys;
+package com.outofoctopus.encryption;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.cloudkms.v1.CloudKMS;
@@ -11,11 +11,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-public class KeyClient {
+public class EncryptionClient {
     private final CloudKMS kms;
 
     @Inject
-    public KeyClient(CloudKMS kms) {
+    public EncryptionClient(CloudKMS kms) {
         this.kms = kms;
     }
 

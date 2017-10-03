@@ -1,4 +1,4 @@
-package com.outofoctopus.keys;
+package com.outofoctopus.encryption;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
@@ -11,7 +11,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import java.io.IOException;
 
-public class KeyModule extends AbstractModule {
+public class EncryptionModule extends AbstractModule {
     @Override
     public void configure() {
     }

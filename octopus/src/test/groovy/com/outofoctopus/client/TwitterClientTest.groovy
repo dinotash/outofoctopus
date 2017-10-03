@@ -12,8 +12,8 @@ import com.outofoctopus.db.MediumDAO.MediumName
 import com.outofoctopus.db.MediumDAOModule
 import com.outofoctopus.db.TwitterDAO
 import com.outofoctopus.db.TwitterDAOModule
-import com.outofoctopus.keys.KeyClient
-import com.outofoctopus.keys.KeyModule
+import com.outofoctopus.encryption.EncryptionClient
+import com.outofoctopus.encryption.EncryptionModule
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount
 import org.apache.commons.lang3.StringUtils
 import twitter4j.ResponseList
@@ -42,10 +42,10 @@ class TwitterClientTest extends GroovyTestCase {
                 new DatastoreModule(),
                 new MediumDAOModule(),
                 new TwitterDAOModule(),
-                new KeyModule())
+                new EncryptionModule())
         MediumDAO mediumDAO = injector.getInstance(MediumDAO.class)
         TwitterDAO twitterDAO = injector.getInstance(TwitterDAO.class)
-        KeyClient keyClient = injector.getInstance(KeyClient.class)
+        EncryptionClient keyClient = injector.getInstance(EncryptionClient.class)
 
         String consumerKey = keyClient.decrypt(TWITTER_KEY, mediumDAO.getConsumerKey(MediumName.TWITTER).get())
         String consumerSecret = keyClient.decrypt(TWITTER_KEY, mediumDAO.getConsumerSecret(MediumName.TWITTER).get())
