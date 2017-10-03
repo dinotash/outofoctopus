@@ -4,6 +4,16 @@ import static com.google.common.truth.Truth.assertThat
 
 import com.google.cloud.Timestamp
 import com.google.common.collect.ImmutableList
+import com.google.inject.Guice
+import com.google.inject.Injector
+import com.outofoctopus.db.DatastoreModule
+import com.outofoctopus.db.MediumDAO
+import com.outofoctopus.db.MediumDAO.MediumName
+import com.outofoctopus.db.MediumDAOModule
+import com.outofoctopus.db.TwitterDAO
+import com.outofoctopus.db.TwitterDAOModule
+import com.outofoctopus.keys.KeyClient
+import com.outofoctopus.keys.KeyModule
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount
 import org.apache.commons.lang3.StringUtils
 import twitter4j.ResponseList
@@ -17,6 +27,7 @@ class TwitterClientTest extends GroovyTestCase {
     private static final long FIRST_MENTION_ID = 904563738581155840L
     private static final long SECOND_MENTION_ID = 904573053123813376L
     private static final long SIXTH_SEPTEMBER_2017_9AM_GMT_MICROSECONDS = 1504688400000000L
+    private static final String TWITTER_KEY = "octopus-twitter"
 
     private static TwitterAccount mainTestUser
     private static TwitterAccount sendTestUser
@@ -27,34 +38,28 @@ class TwitterClientTest extends GroovyTestCase {
     void setUp() {
         super.setUp()
 
-        InputStream input = getClass().getClassLoader().getResourceAsStream("twitter.properties")
-        Properties consumer = new Properties()
-        consumer.load(input)
+        Injector injector = Guice.createInjector(
+                new DatastoreModule(),
+                new MediumDAOModule(),
+                new TwitterDAOModule(),
+                new KeyModule())
+        MediumDAO mediumDAO = injector.getInstance(MediumDAO.class)
+        TwitterDAO twitterDAO = injector.getInstance(TwitterDAO.class)
+        KeyClient keyClient = injector.getInstance(KeyClient.class)
+
+        String consumerKey = keyClient.decrypt(TWITTER_KEY, mediumDAO.getConsumerKey(MediumName.TWITTER).get())
+        String consumerSecret = keyClient.decrypt(TWITTER_KEY, mediumDAO.getConsumerSecret(MediumName.TWITTER).get())
 
         ConfigurationBuilder cb = new ConfigurationBuilder()
         cb.setDebugEnabled(true)
-            .setOAuthConsumerKey(consumer.getProperty("app.oauth.consumerKey"))
-            .setOAuthConsumerSecret(consumer.getProperty("app.oauth.consumerSecret"))
+            .setOAuthConsumerKey(consumerKey)
+            .setOAuthConsumerSecret(consumerSecret)
 
-        twitterClient = new TwitterClient(new TwitterFactory(cb.build()).getInstance())
+        twitterClient = new TwitterClient(new TwitterFactory(cb.build()).getInstance(), keyClient, "octopus-twitter")
 
-        mainTestUser = TwitterAccount.newBuilder()
-                .setHandle(consumer.getProperty("mainTestAccount.accountName"))
-                .setAccessToken(consumer.getProperty("mainTestAccount.oauth.accessToken"))
-                .setAccessTokenSecret(consumer.getProperty("mainTestAccount.oauth.accessTokenSecret"))
-                .build()
-
-        sendTestUser = TwitterAccount.newBuilder()
-                .setHandle(consumer.getProperty("sendTestAccount.oauth.accessToken"))
-                .setAccessToken(consumer.getProperty("sendTestAccount.oauth.accessToken"))
-                .setAccessTokenSecret(consumer.getProperty("sendTestAccount.oauth.accessTokenSecret"))
-                .build()
-
-        noTweetsTestUser = TwitterAccount.newBuilder()
-                .setHandle(consumer.getProperty("noTweetsTestAccount.oauth.accessToken"))
-                .setAccessToken(consumer.getProperty("noTweetsTestAccount.oauth.accessToken"))
-                .setAccessTokenSecret(consumer.getProperty("noTweetsTestAccount.oauth.accessTokenSecret"))
-                .build()
+        mainTestUser = twitterDAO.getAccount("oooctopustest").get()
+        sendTestUser = twitterDAO.getAccount("oooctopustest3").get()
+        noTweetsTestUser = twitterDAO.getAccount("oooctopustest4").get()
     }
 
     void tearDown() {

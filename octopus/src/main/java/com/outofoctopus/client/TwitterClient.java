@@ -2,6 +2,8 @@ package com.outofoctopus.client;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.outofoctopus.client.TwitterClientModule.TwitterEncryptionKey;
+import com.outofoctopus.keys.KeyClient;
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
 import java.io.IOException;
 import java.time.Instant;
@@ -28,18 +30,26 @@ public class TwitterClient {
     private static final int TWEET_LENGTH = 140;
 
     private final Twitter twitter;
+    private final KeyClient keyClient;
+    private final String encryptionKeyName;
     private TwitterAccount account;
 
     @Inject
-    TwitterClient(Twitter twitter) throws TwitterException, IOException {
+    TwitterClient(
+            Twitter twitter,
+            KeyClient keyClient,
+            @TwitterEncryptionKey String encryptionKeyName
+    ) throws TwitterException, IOException {
         this.twitter = twitter;
         this.account = TwitterAccount.getDefaultInstance();
+        this.keyClient = keyClient;
+        this.encryptionKeyName = encryptionKeyName;
     }
 
-    public void authenticate(TwitterAccount account) throws TwitterException {
+    public void authenticate(TwitterAccount account) throws TwitterException, IOException {
         AccessToken accessToken = new AccessToken(
-          account.getAccessToken(),
-          account.getAccessTokenSecret());
+          keyClient.decrypt(encryptionKeyName, account.getAccessToken()),
+          keyClient.decrypt(encryptionKeyName, account.getAccessTokenSecret()));
         twitter.setOAuthAccessToken(accessToken);
         this.account = account;
     }

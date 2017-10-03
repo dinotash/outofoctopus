@@ -13,9 +13,9 @@ import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.outofoctopus.db.DAOModule.TwitterInject;
+import com.outofoctopus.db.TwitterDAOModule.TwitterInject;
+import com.outofoctopus.db.TwitterDAOModule.ProjectName;
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount;
-import com.outofoctopus.scanner.ScannerModule.ProjectName;
 import java.util.Optional;
 
 public class TwitterDatastoreDAO implements TwitterDAO {
