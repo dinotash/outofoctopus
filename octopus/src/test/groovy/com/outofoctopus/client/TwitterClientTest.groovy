@@ -7,27 +7,21 @@ import com.google.common.collect.ImmutableList
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.outofoctopus.db.DatastoreModule
-import com.outofoctopus.db.MediumDAO
-import com.outofoctopus.db.MediumDAO.MediumName
 import com.outofoctopus.db.MediumDAOModule
 import com.outofoctopus.db.TwitterDAO
 import com.outofoctopus.db.TwitterDAOModule
-import com.outofoctopus.encryption.EncryptionClient
 import com.outofoctopus.encryption.EncryptionModule
 import com.outofoctopus.proto.TwitterProtos.TwitterAccount
 import org.apache.commons.lang3.StringUtils
 import twitter4j.ResponseList
 import twitter4j.Status
 import twitter4j.StatusUpdate
-import twitter4j.TwitterFactory
-import twitter4j.conf.ConfigurationBuilder
 
 class TwitterClientTest extends GroovyTestCase {
 
     private static final long FIRST_MENTION_ID = 904563738581155840L
     private static final long SECOND_MENTION_ID = 904573053123813376L
     private static final long SIXTH_SEPTEMBER_2017_9AM_GMT_MICROSECONDS = 1504688400000000L
-    private static final String TWITTER_KEY = "octopus-twitter"
 
     private static TwitterAccount mainTestUser
     private static TwitterAccount sendTestUser
@@ -42,20 +36,10 @@ class TwitterClientTest extends GroovyTestCase {
                 new DatastoreModule(),
                 new MediumDAOModule(),
                 new TwitterDAOModule(),
-                new EncryptionModule())
-        MediumDAO mediumDAO = injector.getInstance(MediumDAO.class)
+                new EncryptionModule(),
+                new TwitterClientModule())
         TwitterDAO twitterDAO = injector.getInstance(TwitterDAO.class)
-        EncryptionClient keyClient = injector.getInstance(EncryptionClient.class)
-
-        String consumerKey = keyClient.decrypt(TWITTER_KEY, mediumDAO.getConsumerKey(MediumName.TWITTER).get())
-        String consumerSecret = keyClient.decrypt(TWITTER_KEY, mediumDAO.getConsumerSecret(MediumName.TWITTER).get())
-
-        ConfigurationBuilder cb = new ConfigurationBuilder()
-        cb.setDebugEnabled(true)
-            .setOAuthConsumerKey(consumerKey)
-            .setOAuthConsumerSecret(consumerSecret)
-
-        twitterClient = new TwitterClient(new TwitterFactory(cb.build()).getInstance(), keyClient, "octopus-twitter")
+        twitterClient = injector.getInstance(TwitterClient.class)
 
         mainTestUser = twitterDAO.getAccount("oooctopustest").get()
         sendTestUser = twitterDAO.getAccount("oooctopustest3").get()
