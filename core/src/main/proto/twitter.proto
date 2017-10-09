@@ -1,0 +1,30 @@
+syntax = "proto2";
+
+option java_package = "com.outofoctopus.proto";
+option java_outer_classname = "TwitterProtos";
+
+import "google/protobuf/timestamp.proto";
+
+message TwitterAccount {
+    // User account name e.g. @dinosaurs_rarr
+    optional string handle = 1;
+
+    // If true, auto-replies should be sent for this user
+    optional bool active = 2;
+
+    // Period in which account should be treated as active
+    optional google.protobuf.Timestamp active_from = 3;
+    optional google.protobuf.Timestamp active_until = 4;
+    optional string timezone = 5; // e.g. Europe/London
+
+    // Token used to authenticate user (stored encypted)
+    optional string access_token = 6;
+    optional string access_token_secret = 7;
+
+    // Message to send when replying to messages
+    optional string message = 8;
+
+    // User's locale. Used to format messages
+    // Format is a BCP 47 language tag e.g. en-GB
+    optional string locale = 9;
+}
